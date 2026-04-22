@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum role_enum {
+  PATIENT
+  DOCTOR
+}
+
+enum intake_status_enum {
+  pending
+  taken
+  skipped
+  late
+}
+
+enum link_status_enum {
+  pending
+  active
+  revoked
+}
+
+model users {
+  id                   Int                    @id @default(autoincrement())
+  email                String                 @unique @db.VarChar(255)
+  password_hash        String                 @db.VarChar(255)
+  full_name            String                 @db.VarChar(255)
+  phone                String?                @db.VarChar(20)
+  role                 role_enum
+  date_of_birth        DateTime?              @db.Date
+  created_at           DateTime               @default(now()) @db.Timestamptz()
+  medical_profiles     medical_profiles?
+  medications          medications[]
+  symptom_entries      symptom_entries[]
+  doctor_links         doctor_patient_links[] @relation("DoctorLinks")
+  patient_links        doctor_patient_links[] @relation("PatientLinks")
+}
+
+model medical_profiles {
+  id                         Int      @id @default(autoincrement())
+  user_id                    Int      @unique
+  allergies                  String?  @db.Text
+  chronic_conditions         String?  @db.Text
+  emergency_contact_name     String?  @db.VarChar(255)
+  emergency_contact_phone    String?  @db.VarChar(20)
+  emergency_contact_relation String?  @db.VarChar(100)
+  created_at                 DateTime @default(now()) @db.Timestamptz()
+  updated_at                 DateTime @default(now()) @db.Timestamptz()
+  user                       users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model medications {
+  id              Int           @id @default(autoincrement())
+  patient_id      Int
+  name            String        @db.VarChar(255)
+  dosage          String        @db.VarChar(100)
+  frequency_hours Int
+  start_date      DateTime      @db.Date
+  end_date        DateTime?     @db.Date
+  instructions    String?       @db.Text
+  is_active       Boolean       @default(true)
+  created_at      DateTime      @default(now()) @db.Timestamptz()
+  updated_at      DateTime      @default(now()) @db.Timestamptz()
+  patient         users         @relation(fields: [patient_id], references: [id], onDelete: Cascade)
+  intake_logs     intake_logs[]
+}
+
+model intake_logs {
+  id             Int                @id @default(autoincrement())
+  medication_id  Int
+  scheduled_date DateTime           @db.Date
+  scheduled_time DateTime           @db.Time()
+  taken_at       DateTime?          @db.Timestamptz()
+  status         intake_status_enum @default(pending)
+  created_at     DateTime           @default(now()) @db.Timestamptz()
+  medication     medications        @relation(fields: [medication_id], references: [id], onDelete: Cascade)
+
+  @@unique([medication_id, scheduled_date, scheduled_time], name: "uq_intake_logs_slot")
+}
+
+model symptom_entries {
+  id           Int      @id @default(autoincrement())
+  patient_id   Int
+  symptom_name String   @db.VarChar(255)
+  severity     Int      @db.SmallInt
+  notes        String?  @db.Text
+  entry_date   DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  created_at   DateTime @default(now()) @db.Timestamptz()
+  updated_at   DateTime @default(now()) @db.Timestamptz()
+  patient      users    @relation(fields: [patient_id], references: [id], onDelete: Cascade)
+
+  @@unique([patient_id, symptom_name, entry_date], name: "uq_symptom_per_day")
+}
+
+model doctor_patient_links {
+  id         Int              @id @default(autoincrement())
+  doctor_id  Int
+  patient_id Int?
+  link_code  String           @unique @db.VarChar(10)
+  status     link_status_enum @default(pending)
+  created_at DateTime         @default(now()) @db.Timestamptz()
+  doctor     users            @relation("DoctorLinks", fields: [doctor_id], references: [id], onDelete: Cascade)
+  patient    users?           @relation("PatientLinks", fields: [patient_id], references: [id], onDelete: Cascade)
+}
