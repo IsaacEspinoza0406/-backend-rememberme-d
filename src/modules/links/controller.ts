@@ -1,35 +1,22 @@
-import { Request, Response, NextFunction } from 'express';
-import * as linkService from './service';
+import { Request, Response } from 'express';
+import * as service from './service';
 
-export const generate = async (req: Request, res: Response, next: NextFunction) => {
+export const generate = async (req: Request, res: Response) => {
   try {
-    const link = await linkService.createLink(req.user!.userId);
-    res.status(201).json({ code: 'SUCCESS', message: 'Link created', data: link });
-  } catch (error) { next(error); }
+    const link = await service.createLink(req.user!.id);
+    res.status(201).json(link);
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to generate link' });
+  }
 };
 
-export const claim = async (req: Request, res: Response, next: NextFunction) => {
+export const claim = async (req: Request, res: Response) => {
   try {
-    const link = await linkService.claimLink(req.user!.userId, req.body.link_code);
-    res.json({ code: 'SUCCESS', message: 'Link claimed', data: link });
-  } catch (error) { next(error); }
-};
-
-export const getDashboard = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const dash = await linkService.getDoctorDashboard(req.user!.userId);
-    res.json({ code: 'SUCCESS', data: dash });
-  } catch (error) { next(error); }
-};
-
-export const getMyLinks = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (req.user!.role === 'DOCTOR') {
-      const links = await linkService.getDoctorLinks(req.user!.userId);
-      res.json({ code: 'SUCCESS', data: links });
-    } else {
-      const links = await linkService.getPatientLink(req.user!.userId);
-      res.json({ code: 'SUCCESS', data: links });
-    }
-  } catch (error) { next(error); }
+    const link = await service.claimLink(req.user!.id, req.body.link_code);
+    res.status(200).json(link);
+  } catch (error: any) {
+    const statusCode = error.statusCode || 500;
+    const errorMessage = error.message || 'Failed to claim link';
+    res.status(statusCode).json({ error: errorMessage });
+  }
 };

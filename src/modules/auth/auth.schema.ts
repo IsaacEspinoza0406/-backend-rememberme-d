@@ -7,7 +7,7 @@ export const registerSchema = z.object({
     full_name: z.string().min(2),
     phone: z.string().optional(),
     role: z.enum(['PATIENT', 'DOCTOR']),
-    date_of_birth: z.string().optional() // ISO date string
+    date_of_birth: z.string().optional()
   })
 });
 

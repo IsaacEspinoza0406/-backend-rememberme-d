@@ -1,20 +1,13 @@
 import { Router } from 'express';
-import { register, login } from './controller';
-import { registerSchema, loginSchema } from './schema';
+import { register, login, getProfile } from './auth.controller';
+import { registerSchema, loginSchema } from './auth.schema';
+import { validate } from '../../middlewares/validate.middleware';
+import { requireAuth } from '../../middlewares/auth.middleware';
 
 const router = Router();
 
-// Express validation middleware using Zod
-export const validate = (schema: any) => (req: any, res: any, next: any) => {
-  try {
-    schema.parse({ body: req.body, query: req.query, params: req.params });
-    next();
-  } catch (error) {
-    next(error);
-  }
-};
-
 router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
+router.get('/profile', requireAuth, getProfile);
 
 export const authRouter = router;

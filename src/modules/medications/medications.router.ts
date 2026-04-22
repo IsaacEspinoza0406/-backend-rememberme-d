@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { createSymptom } from './controller';
-import { createSymptomSchema } from './schema';
+import { getMedications, createMedication } from './controller';
+import { createMedicationSchema } from './schema';
 import { requireAuth } from '../../middlewares/auth.middleware';
 import { requireRole } from '../../middlewares/role.middleware';
 import { validate } from '../../middlewares/validate.middleware';
@@ -10,6 +10,7 @@ const router = Router();
 router.use(requireAuth);
 router.use(requireRole('PATIENT'));
 
-router.post('/', validate(createSymptomSchema), createSymptom);
+router.get('/', getMedications);
+router.post('/', validate(createMedicationSchema), createMedication);
 
-export const symptomsRouter = router;
+export const medicationsRouter = router;

@@ -1,14 +1,16 @@
 import { Router } from 'express';
-import { generate, claim } from './controller';
-import { claimLinkSchema } from './schema';
+import { getToday, confirm } from './controller';
+import { updateStatusSchema } from './schema';
 import { requireAuth } from '../../middlewares/auth.middleware';
 import { requireRole } from '../../middlewares/role.middleware';
 import { validate } from '../../middlewares/validate.middleware';
 
 const router = Router();
+
 router.use(requireAuth);
+router.use(requireRole('PATIENT'));
 
-router.post('/generate', requireRole('DOCTOR'), generate);
-router.post('/claim', requireRole('PATIENT'), validate(claimLinkSchema), claim);
+router.get('/today', getToday);
+router.patch('/:id/confirm', validate(updateStatusSchema), confirm);
 
-export const linksRouter = router;
+export const intakeLogsRouter = router;

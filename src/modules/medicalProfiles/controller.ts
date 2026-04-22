@@ -1,20 +1,14 @@
-import { Request, Response, NextFunction } from 'express';
-import * as profileService from './service';
+import { Request, Response } from 'express';
+import * as service from './service';
 
-export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
+export const getMyProfile = async (req: Request, res: Response) => {
   try {
-    const profile = await profileService.getMedicalProfile(req.user!.userId);
-    res.json({ code: 'SUCCESS', data: profile });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const profile = await profileService.updateMedicalProfile(req.user!.userId, req.body);
-    res.json({ code: 'SUCCESS', message: 'Profile updated', data: profile });
-  } catch (error) {
-    next(error);
+    const profile = await service.getProfile(req.user!.id);
+    if (!profile) {
+      return res.status(404).json({ error: 'Medical profile not found' });
+    }
+    res.status(200).json(profile);
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to retrieve profile' });
   }
 };
