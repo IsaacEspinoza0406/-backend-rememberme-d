@@ -9,12 +9,12 @@ services:
       POSTGRES_PASSWORD: supersecretpassword
       POSTGRES_DB: remembermed
     ports:
-      - "5432:5432"
+      - "5441:5432"
     volumes:
       - ./init-db:/docker-entrypoint-initdb.d
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d remembermed"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d remembermed" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,7 +25,7 @@ services:
       dockerfile: Dockerfile
     container_name: rememberme-api
     ports:
-      - "3001:3001"
+      - "3005:3001"
     environment:
       - DATABASE_URL=postgresql://rememberme_app:RemMe_AppP@ss_2026!@db:5432/remembermed?schema=rememberme
       - JWT_SECRET=your-super-secret-jwt-key-here

@@ -1,0 +1,228 @@
+{
+  "info": {
+    "name": "RememberMe-d API - Postman Collection",
+    "description": "Colección completa para probar los endpoints del proyecto RememberMe-d localmente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3005/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"paciente@email.com\",\n  \"password\": \"Secreta123!\",\n  \"full_name\": \"Juan Pérez López\",\n  \"phone\": \"9611234567\",\n  \"role\": \"PATIENT\",\n  \"date_of_birth\": \"1995-04-20\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"paciente@email.com\",\n  \"password\": \"Secreta123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Medications",
+      "item": [
+        {
+          "name": "Get Medications",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/medications",
+              "host": ["{{base_url}}"],
+              "path": ["medications"]
+            }
+          }
+        },
+        {
+          "name": "Create Medication",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Paracetamol\",\n  \"dosage\": \"500mg\",\n  \"frequency_hours\": 8,\n  \"start_date\": \"2026-02-05\",\n  \"end_date\": \"2026-02-12\",\n  \"instructions\": \"Tomar después de comer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/medications",
+              "host": ["{{base_url}}"],
+              "path": ["medications"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Intake Logs",
+      "item": [
+        {
+          "name": "Get Today Intakes",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/intake-logs/today",
+              "host": ["{{base_url}}"],
+              "path": ["intake-logs", "today"]
+            }
+          }
+        },
+        {
+          "name": "Confirm Intake",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"taken\",\n  \"taken_at\": \"2026-02-05T08:15:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/intake-logs/1/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["intake-logs", "1", "confirm"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Symptoms",
+      "item": [
+        {
+          "name": "Register Symptom",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"symptom_name\": \"Dolor abdominal\",\n  \"severity\": 9,\n  \"notes\": \"Dolor punzante post desayuno\",\n  \"entry_date\": \"2026-02-05\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/symptoms",
+              "host": ["{{base_url}}"],
+              "path": ["symptoms"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Links & Profiles",
+      "item": [
+        {
+          "name": "Generate Link (Doctor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/links/generate",
+              "host": ["{{base_url}}"],
+              "path": ["links", "generate"]
+            }
+          }
+        },
+        {
+          "name": "Claim Link (Patient)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"link_code\": \"A3B9K2\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/links/claim",
+              "host": ["{{base_url}}"],
+              "path": ["links", "claim"]
+            }
+          }
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/medical-profiles/me",
+              "host": ["{{base_url}}"],
+              "path": ["medical-profiles", "me"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

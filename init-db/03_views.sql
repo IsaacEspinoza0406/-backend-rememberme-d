@@ -213,10 +213,11 @@ islands AS (
     scheduled_date,
     -- Al restar el número de fila de la fecha, las fechas consecutivas
     -- producen el mismo "grupo"
+    -- bien
     scheduled_date - (ROW_NUMBER() OVER (
       PARTITION BY patient_id
       ORDER BY scheduled_date
-    ) * INTERVAL '1 day')::DATE       AS streak_group
+    ))::INT       AS streak_group
   FROM perfect_days
 ),
 

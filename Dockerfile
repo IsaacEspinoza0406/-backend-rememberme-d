@@ -1,5 +1,8 @@
 # Etapa de construcción
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
+
+# Instalar OpenSSL para que Prisma pueda conectarse a la BD
+RUN apt-get update -y && apt-get install -y openssl
 
 WORKDIR /app
 
@@ -18,7 +21,10 @@ COPY . .
 RUN npm run build
 
 # Etapa de producción
-FROM node:20-alpine
+FROM node:20-slim
+
+# Instalar OpenSSL también en la etapa final
+RUN apt-get update -y && apt-get install -y openssl
 
 WORKDIR /app
 
