@@ -1,226 +1,556 @@
 {
   "info": {
-    "name": "RememberMe-d API - Postman Collection",
-    "description": "Colección completa para probar los endpoints del proyecto RememberMe-d localmente.",
+    "name": "RememberMe-d API",
+    "description": "Colección completa de pruebas para el backend RememberMe-d. Base URL: http://localhost:3005/api",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:3005/api",
-      "type": "string"
-    },
-    {
-      "key": "token",
-      "value": "",
-      "type": "string"
-    }
+    { "key": "base_url", "value": "http://localhost:3005/api" },
+    { "key": "token_patient", "value": "" },
+    { "key": "token_doctor", "value": "" },
+    { "key": "medication_id", "value": "" },
+    { "key": "log_id", "value": "" },
+    { "key": "link_code", "value": "" }
   ],
   "item": [
     {
-      "name": "Auth",
+      "name": "🩺 0. Health Check",
       "item": [
         {
-          "name": "Register",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"paciente@email.com\",\n  \"password\": \"Secreta123!\",\n  \"full_name\": \"Juan Pérez López\",\n  \"phone\": \"9611234567\",\n  \"role\": \"PATIENT\",\n  \"date_of_birth\": \"1995-04-20\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "register"]
-            }
-          }
-        },
-        {
-          "name": "Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"paciente@email.com\",\n  \"password\": \"Secreta123!\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
-            }
-          }
-        },
-        {
-          "name": "Profile",
+          "name": "GET /health",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/auth/profile",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "profile"]
+            "url": { "raw": "http://localhost:3005/health" },
+            "description": "Verifica que el servidor y la DB estén corriendo. No requiere /api prefix."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('DB conectada', () => {",
+                  "  const r = pm.response.json();",
+                  "  pm.expect(r).to.have.property('status');",
+                  "});"
+                ]
+              }
             }
-          }
+          ]
         }
       ]
     },
     {
-      "name": "Medications",
+      "name": "🔐 1. Auth",
       "item": [
         {
-          "name": "Get Medications",
+          "name": "POST /auth/register (PATIENT)",
           "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/medications",
-              "host": ["{{base_url}}"],
-              "path": ["medications"]
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/register" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Isaac Paciente\",\n  \"email\": \"paciente@test.com\",\n  \"password\": \"Password123\",\n  \"role\": \"PATIENT\"\n}"
+            },
+            "description": "Registra un paciente. Crea usuario + medical_profile automáticamente en una transacción."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Tiene id de usuario', () => {",
+                  "  const r = pm.response.json();",
+                  "  pm.expect(r).to.have.property('id');",
+                  "});"
+                ]
+              }
             }
+          ]
+        },
+        {
+          "name": "POST /auth/register (DOCTOR)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/register" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dr. Fernando Mora\",\n  \"email\": \"doctor@test.com\",\n  \"password\": \"Password123\",\n  \"role\": \"DOCTOR\"\n}"
+            },
+            "description": "Registra un doctor. Guarda el token que regresa el login posterior."
           }
         },
         {
-          "name": "Create Medication",
+          "name": "POST /auth/login (PATIENT) ⭐",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/login" },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Paracetamol\",\n  \"dosage\": \"500mg\",\n  \"frequency_hours\": 8,\n  \"start_date\": \"2026-02-05\",\n  \"end_date\": \"2026-02-12\",\n  \"instructions\": \"Tomar después de comer\"\n}"
+              "raw": "{\n  \"email\": \"paciente@test.com\",\n  \"password\": \"Password123\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/medications",
-              "host": ["{{base_url}}"],
-              "path": ["medications"]
+            "description": "Login del paciente. El test guarda el token automáticamente en la variable {{token_patient}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "if (r.token) {",
+                  "  pm.collectionVariables.set('token_patient', r.token);",
+                  "  console.log('✅ Token de paciente guardado');",
+                  "} else {",
+                  "  console.error('❌ No se encontró token en la respuesta');",
+                  "}"
+                ]
+              }
             }
-          }
+          ]
+        },
+        {
+          "name": "POST /auth/login (DOCTOR) ⭐",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/auth/login" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"doctor@test.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "description": "Login del doctor. Guarda el token en {{token_doctor}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "if (r.token) {",
+                  "  pm.collectionVariables.set('token_doctor', r.token);",
+                  "  console.log('✅ Token de doctor guardado');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /auth/profile (mi perfil)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_patient}}" }],
+            "url": { "raw": "{{base_url}}/auth/profile" },
+            "description": "Retorna el usuario autenticado. Requiere token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene email', () => {",
+                  "  const r = pm.response.json();",
+                  "  pm.expect(r).to.have.property('email');",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Intake Logs",
+      "name": "🏥 2. Medical Profiles",
       "item": [
         {
-          "name": "Get Today Intakes",
+          "name": "GET /medical-profiles/me",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/intake-logs/today",
-              "host": ["{{base_url}}"],
-              "path": ["intake-logs", "today"]
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_patient}}" }],
+            "url": { "raw": "{{base_url}}/medical-profiles/me" },
+            "description": "Retorna el perfil médico del paciente autenticado. Se crea automáticamente al registrar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene patient_id', () => {",
+                  "  const r = pm.response.json();",
+                  "  pm.expect(r).to.have.property('patient_id');",
+                  "});"
+                ]
+              }
             }
-          }
+          ]
         },
         {
-          "name": "Confirm Intake",
+          "name": "PATCH /medical-profiles/me (actualizar)",
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Authorization", "value": "Bearer {{token_patient}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
+            "url": { "raw": "{{base_url}}/medical-profiles/me" },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"taken\",\n  \"taken_at\": \"2026-02-05T08:15:00Z\"\n}"
+              "raw": "{\n  \"allergies\": \"Penicilina, Aspirina\",\n  \"chronic_conditions\": \"Diabetes tipo 2\",\n  \"emergency_contact_name\": \"María Espinoza\",\n  \"emergency_contact_phone\": \"+52 961 123 4567\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/intake-logs/1/confirm",
-              "host": ["{{base_url}}"],
-              "path": ["intake-logs", "1", "confirm"]
-            }
+            "description": "Actualiza el perfil médico del paciente. Ajusta los campos según el schema de Prisma."
           }
         }
       ]
     },
     {
-      "name": "Symptoms",
+      "name": "💊 3. Medications",
       "item": [
         {
-          "name": "Register Symptom",
+          "name": "POST /medications (crear) ⭐",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Authorization", "value": "Bearer {{token_patient}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
+            "url": { "raw": "{{base_url}}/medications" },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"symptom_name\": \"Dolor abdominal\",\n  \"severity\": 9,\n  \"notes\": \"Dolor punzante post desayuno\",\n  \"entry_date\": \"2026-02-05\"\n}"
+              "raw": "{\n  \"name\": \"Metformina\",\n  \"dosage\": \"500mg\",\n  \"frequency\": 2,\n  \"start_date\": \"2025-01-01\",\n  \"notes\": \"Tomar con alimentos\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/symptoms",
-              "host": ["{{base_url}}"],
-              "path": ["symptoms"]
+            "description": "Crea un medicamento para el paciente. Guarda el ID en {{medication_id}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const r = pm.response.json();",
+                  "if (r.id) {",
+                  "  pm.collectionVariables.set('medication_id', r.id);",
+                  "  console.log('✅ medication_id guardado:', r.id);",
+                  "}"
+                ]
+              }
             }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Links & Profiles",
-      "item": [
-        {
-          "name": "Generate Link (Doctor)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/links/generate",
-              "host": ["{{base_url}}"],
-              "path": ["links", "generate"]
-            }
-          }
+          ]
         },
         {
-          "name": "Claim Link (Patient)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"link_code\": \"A3B9K2\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/links/claim",
-              "host": ["{{base_url}}"],
-              "path": ["links", "claim"]
-            }
-          }
-        },
-        {
-          "name": "Get My Profile",
+          "name": "GET /medications (listar todos)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/medical-profiles/me",
-              "host": ["{{base_url}}"],
-              "path": ["medical-profiles", "me"]
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_patient}}" }],
+            "url": { "raw": "{{base_url}}/medications" },
+            "description": "Lista todos los medicamentos del paciente autenticado."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Es un array', () => {",
+                  "  const r = pm.response.json();",
+                  "  pm.expect(r).to.be.an('array');",
+                  "});"
+                ]
+              }
             }
+          ]
+        },
+        {
+          "name": "GET /medications/:id (uno solo)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_patient}}" }],
+            "url": { "raw": "{{base_url}}/medications/{{medication_id}}" },
+            "description": "Obtiene un medicamento específico por ID."
           }
+        },
+        {
+          "name": "PATCH /medications/:id (actualizar)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_patient}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/medications/{{medication_id}}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dosage\": \"850mg\",\n  \"notes\": \"Dosis aumentada por el doctor\"\n}"
+            },
+            "description": "Actualiza campos de un medicamento existente."
+          }
+        },
+        {
+          "name": "DELETE /medications/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_patient}}" }],
+            "url": { "raw": "{{base_url}}/medications/{{medication_id}}" },
+            "description": "Elimina un medicamento. ⚠️ Ejecutar al final de las pruebas."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 4. Intake Logs",
+      "item": [
+        {
+          "name": "GET /intake-logs/today ⭐",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_patient}}" }],
+            "url": { "raw": "{{base_url}}/intake-logs/today" },
+            "description": "Obtiene los registros de tomas del día actual desde la vista SQL. Guarda un log_id para confirmar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "if (Array.isArray(r) && r.length > 0) {",
+                  "  const pendingLog = r.find(l => l.status === 'pending') || r[0];",
+                  "  pm.collectionVariables.set('log_id', pendingLog.id);",
+                  "  console.log('✅ log_id guardado:', pendingLog.id);",
+                  "} else {",
+                  "  console.warn('⚠️ No hay logs hoy. Asegúrate de haber creado un medicamento.');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /intake-logs/confirm ⭐",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_patient}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/intake-logs/confirm" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"logId\": \"{{log_id}}\"\n}"
+            },
+            "description": "Confirma que el paciente tomó su medicamento. Cambia status a 'taken'."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🤒 5. Symptoms",
+      "item": [
+        {
+          "name": "POST /symptoms (registrar) ⭐",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_patient}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/symptoms" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dolor de cabeza\",\n  \"severity\": 3,\n  \"notes\": \"Leve, después del almuerzo\",\n  \"date\": \"2025-04-22\"\n}"
+            },
+            "description": "Registra un síntoma del día. Unique constraint: un síntoma por nombre/paciente/día."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /symptoms (duplicado - debe fallar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_patient}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/symptoms" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dolor de cabeza\",\n  \"severity\": 5,\n  \"notes\": \"Intento duplicado\",\n  \"date\": \"2025-04-22\"\n}"
+            },
+            "description": "Debe retornar 409 o 400 por violación del unique constraint (mismo síntoma, mismo día)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Debe fallar con 4xx', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([400, 409, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔗 6. Links (Doctor-Paciente)",
+      "item": [
+        {
+          "name": "POST /links/generate (DOCTOR genera código) ⭐",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_doctor}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/links/generate" },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "description": "El doctor genera un código alfanumérico único para compartir con su paciente."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 o 201', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "const r = pm.response.json();",
+                  "const code = r.code || r.link_code || (r.link && r.link.code);",
+                  "if (code) {",
+                  "  pm.collectionVariables.set('link_code', code);",
+                  "  console.log('✅ Código de link guardado:', code);",
+                  "} else {",
+                  "  console.warn('⚠️ Revisa la propiedad del código en la respuesta:', JSON.stringify(r));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /links/claim (PATIENT usa el código)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_patient}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/links/claim" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{link_code}}\"\n}"
+            },
+            "description": "El paciente ingresa el código del doctor para vincularse. Requiere token de PACIENTE."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 o 201', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🚫 7. Tests de Seguridad",
+      "item": [
+        {
+          "name": "GET sin token (debe dar 401)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/medications" },
+            "description": "Sin Authorization header. Debe retornar 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 sin token', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET con token inválido (debe dar 401)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer token.falso.aqui" }],
+            "url": { "raw": "{{base_url}}/medications" },
+            "description": "Token JWT malformado. Debe retornar 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 con token inválido', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Doctor genera link con token de PATIENT (debe dar 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_patient}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/links/generate" },
+            "body": { "mode": "raw", "raw": "{}" },
+            "description": "Un PATIENT no puede generar códigos de doctor. Debe retornar 403 Forbidden."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 por rol incorrecto', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
         }
       ]
     }
