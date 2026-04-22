@@ -5,3 +5,10 @@ export const getProfile = async (userId: number) => {
     where: { user_id: userId }
   });
 };
+
+export const updateProfile = async (userId: number, data: any) => {
+  return prisma.medical_profiles.update({
+    where: { user_id: userId },
+    data
+  });
+};

@@ -21,3 +21,32 @@ export const createMedication = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to create medication' });
   }
 };
+export const getMedicationById = async (req: Request, res: Response) => {
+  try {
+    const medication = await service.getMedicationById(Number(req.params.id), req.user!.id);
+    res.status(200).json(medication);
+  } catch (error: any) {
+    console.error(error);
+    res.status(404).json({ error: 'Medication not found' });
+  }
+};
+
+export const updateMedication = async (req: Request, res: Response) => {
+  try {
+    const medication = await service.updateMedication(Number(req.params.id), req.user!.id, req.body);
+    res.status(200).json(medication);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update medication' });
+  }
+};
+
+export const deleteMedication = async (req: Request, res: Response) => {
+  try {
+    await service.deleteMedication(Number(req.params.id), req.user!.id);
+    res.status(204).send();
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to delete medication' });
+  }
+};

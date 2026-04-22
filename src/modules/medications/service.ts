@@ -20,3 +20,40 @@ export const createMedication = async (patientId: number, data: any) => {
     }
   });
 };
+export const getMedicationByIdService = async (id: number, patientId: number) => {
+  return prisma.medications.findFirstOrThrow({
+    where: { id, patient_id: patientId }
+  });
+};
+
+export const updateMedicationService = async (id: number, patientId: number, data: any) => {
+  return prisma.medications.update({
+    where: { id },
+    data
+  });
+};
+
+export const deleteMedicationService = async (id: number, patientId: number) => {
+  return prisma.medications.delete({
+    where: { id }
+  });
+};
+
+export const getMedicationById = async (id: number, patientId: number) => {
+  return prisma.medications.findFirstOrThrow({
+    where: { id, patient_id: patientId }
+  });
+};
+
+export const updateMedication = async (id: number, patientId: number, data: any) => {
+  return prisma.medications.update({
+    where: { id },
+    data
+  });
+};
+
+export const deleteMedication = async (id: number, patientId: number) => {
+  return prisma.medications.delete({
+    where: { id }
+  });
+};

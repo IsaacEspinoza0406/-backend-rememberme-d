@@ -10,3 +10,5 @@ export const createMedicationSchema = z.object({
     instructions: z.string().optional()
   })
 });
+
+export const updateMedicationSchema = createMedicationSchema.partial();
