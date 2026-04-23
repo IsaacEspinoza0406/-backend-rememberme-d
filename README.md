@@ -6,7 +6,7 @@ Esta API es el núcleo de datos para la plataforma RememberMed, diseñada para f
 El backend maneja la autenticación segura, la creación y gestión de medicamentos, el cálculo automático de horarios de tomas, la sincronización entre perfiles de médicos y pacientes, y el procesamiento de alertas clínicas (rachas, adherencia y síntomas graves).
 
 ## Despliegue de la API
-[Puedes agregar aquí la información sobre dónde está desplegada tu API en producción]
+[https://backend-rememberme-d.onrender.com](https://backend-rememberme-d.onrender.com)
 
 ## Cómo correr el proyecto localmente
 
