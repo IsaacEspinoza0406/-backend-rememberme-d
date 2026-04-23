@@ -3,16 +3,16 @@ services:
     image: postgres:15-alpine
     container_name: rememberme-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: supersecretpassword
-      POSTGRES_DB: remembermed
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5441:5432"
+      - "${DB_HOST_PORT}:5432"
     volumes:
       - ./init-db:/docker-entrypoint-initdb.d
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d remembermed" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,11 +23,11 @@ services:
       dockerfile: Dockerfile
     container_name: rememberme-api
     ports:
-      - "3005:3001"
+      - "${API_HOST_PORT}:${PORT}"
     environment:
-      - DATABASE_URL=postgresql://rememberme_app:RemMe_AppP@ss_2026!@db:5432/remembermed?schema=rememberme
-      - JWT_SECRET=your-super-secret-jwt-key-here
-      - PORT=3001
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=${PORT}
     depends_on:
       db:
         condition: service_healthy

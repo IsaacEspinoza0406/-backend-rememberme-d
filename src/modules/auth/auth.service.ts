@@ -51,10 +51,11 @@ export const registerUser = async (data: any) => {
     });
   }
 
-  const tokenPayload = { id: user.id, email: user.email, role: user.role };
+  const { password_hash: _, ...safeUser } = user;
+  const tokenPayload = { id: safeUser.id, email: safeUser.email, role: safeUser.role };
   const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
 
-  return { user, token };
+  return { user: safeUser, token };
 };
 
 export const loginUser = async (data: any) => {
@@ -69,8 +70,9 @@ export const loginUser = async (data: any) => {
     throw { statusCode: 401, message: 'Invalid credentials' };
   }
 
-  const tokenPayload = { id: user.id, email: user.email, role: user.role };
+  const { password_hash: _, ...safeUser } = user;
+  const tokenPayload = { id: safeUser.id, email: safeUser.email, role: safeUser.role };
   const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
 
-  return { user, token };
+  return { user: safeUser, token };
 };  
