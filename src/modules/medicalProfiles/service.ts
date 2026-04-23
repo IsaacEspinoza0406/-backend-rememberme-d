@@ -7,8 +7,9 @@ export const getProfile = async (userId: number) => {
 };
 
 export const updateProfile = async (userId: number, data: any) => {
-  return prisma.medical_profiles.update({
+  return prisma.medical_profiles.upsert({
     where: { user_id: userId },
-    data
+    update: data,
+    create: { ...data, user_id: userId }
   });
 };

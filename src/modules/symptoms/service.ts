@@ -11,3 +11,10 @@ export const createSymptom = async (patientId: number, data: any) => {
     }
   });
 };
+
+export const getSymptoms = async (patientId: number) => {
+  return prisma.symptom_entries.findMany({
+    where: { patient_id: patientId },
+    orderBy: { entry_date: 'desc' }
+  });
+};

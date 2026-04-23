@@ -14,3 +14,13 @@ export const createSymptom = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to create symptom' });
   }
 };
+
+export const getSymptoms = async (req: Request, res: Response) => {
+  try {
+    const symptoms = await service.getSymptoms(req.user!.id);
+    res.status(200).json(symptoms);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to retrieve symptoms' });
+  }
+};

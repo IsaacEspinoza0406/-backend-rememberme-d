@@ -4,7 +4,7 @@ import * as service from './service';
 export const getMedications = async (req: Request, res: Response) => {
   try {
     const data = await service.getMedications(req.user!.id);
-    res.status(200).json({ data });
+    res.status(200).json(data);
   } catch (error: any) {
     console.error(error);
     res.status(500).json({ error: 'Failed to retrieve medications' });
